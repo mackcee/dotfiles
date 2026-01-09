@@ -1,0 +1,32 @@
+theme = "darcula-solid"
+
+[editor]
+scrolloff = 999
+line-number = "relative"  
+bufferline = "multiple" # shows bufferline when more than one buffer   
+auto-format = true
+
+[editor.cursor-shape] 
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.soft-wrap]
+enable = true
+ 
+[keys.normal]
+"}" = "goto_next_paragraph"
+"{" = "goto_prev_paragraph"
+
+[keys.normal."space"]
+"F" = "file_picker_in_current_buffer_directory"
+
+[keys.select]
+"}" = "goto_next_paragraph"
+"{" = "goto_prev_paragraph"
+
+
+[editor.indent-guides]
+render = true
+character = "|" 
+skip-levels = 1

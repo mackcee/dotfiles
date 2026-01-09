@@ -1,0 +1,16 @@
+[language-server.gopls.config]
+gofumpt = true
+
+
+# [language-server.clangd.config]
+# clang-format = true
+
+[[language]]
+name = "c"
+formatter = { command = "clang-format" }
+auto-format = true
+
+[[language]]
+name = "cpp"
+formatter = { command = "clang-format" }
+auto-format = true
