@@ -10,6 +10,21 @@ export ZSH="$HOME/.oh-my-zsh"
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="robbyrussell"
 
+
+# --- helpers for portability ---
+is_macos() { [[ "$OSTYPE" == darwin* ]]; }
+is_linux() { [[ "$OSTYPE" == linux* ]]; }
+
+# Source a file only if it exists
+source_if_exists() {
+  [[ -f "$1" ]] && source "$1"
+}
+
+# Prefer Homebrew prefix if available (macOS)
+brew_prefix() {
+  command -v brew >/dev/null 2>&1 && brew --prefix
+}
+
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
 # a theme from this variable instead of looking in $ZSH/themes/
@@ -107,28 +122,55 @@ alias cat='bat'
 alias ls='eza --icons'
 alias ll='eza -lah --icons -h'
 alias lt='eza -lah --icons -h --sort=modified'
-alias hx='helix'
 
-zstyle :compinstall filename '/home/mackc/.zshrc'
+
+
+zstyle :compinstall filename "$HOME/.zshrc"
 
 fpath=(~/.zsh/completions $fpath)
 
 autoload -Uz compinit
 compinit
 
-source /usr/share/fzf/key-bindings.zsh
 
-# Autosuggestions (grey inline suggestions)
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+# fzf keybindings / completion (portable)
+if command -v fzf >/dev/null 2>&1; then
+  # preferred: ask fzf to generate correct init for this platform
+  eval "$(fzf --zsh 2>/dev/null)" || true
 
-# Syntax highlighting (must be LAST)
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  # fallback paths (Arch / Homebrew)
+  source_if_exists "/usr/share/fzf/key-bindings.zsh"
+  source_if_exists "/usr/share/fzf/completion.zsh"
 
-KITTY_INSTALLATION_DIR=/usr/lib/kitty
+  local bp="$(brew_prefix)"
+  if [[ -n "$bp" ]]; then
+    source_if_exists "$bp/opt/fzf/shell/key-bindings.zsh"
+    source_if_exists "$bp/opt/fzf/shell/completion.zsh"
+  fi
+fi
 
-# Kitty shell integration (modern)
-if [[ -n "$KITTY_INSTALLATION_DIR" && -f "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty.zsh" ]]; then
-  source "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty.zsh"
+
+# zsh-autosuggestions
+source_if_exists "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+source_if_exists "/usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+local bp="$(brew_prefix)"
+[[ -n "$bp" ]] && source_if_exists "$bp/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
+# zsh-syntax-highlighting (must be last among zsh plugins)
+source_if_exists "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+source_if_exists "/usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+[[ -n "$bp" ]] && source_if_exists "$bp/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+
+# Kitty shell integration (portable)
+# Kitty sets KITTY_INSTALLATION_DIR when launched from Kitty
+if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
+  source_if_exists "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty.zsh"
+else
+  # fallback common paths
+  source_if_exists "/usr/lib/kitty/shell-integration/zsh/kitty.zsh"
+  local bp="$(brew_prefix)"
+  [[ -n "$bp" ]] && source_if_exists "$bp/opt/kitty/share/kitty/shell-integration/zsh/kitty.zsh"
 fi
 
 export PATH="$HOME/.local/bin:$PATH"

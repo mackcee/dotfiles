@@ -5,6 +5,8 @@ scrolloff = 999
 line-number = "relative"  
 bufferline = "multiple" # shows bufferline when more than one buffer   
 auto-format = true
+auto-completion = true
+completion-trigger-len = 2
 
 [editor.cursor-shape] 
 insert = "bar"
@@ -13,7 +15,7 @@ select = "underline"
 
 [editor.soft-wrap]
 enable = true
- 
+
 [keys.normal]
 "}" = "goto_next_paragraph"
 "{" = "goto_prev_paragraph"
