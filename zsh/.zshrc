@@ -118,12 +118,14 @@ export LANG=en_US.UTF-8
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+bindkey -v
+
 alias cat='bat'
 alias ls='eza --icons'
 alias ll='eza -lah --icons -h'
 alias lt='eza -lah --icons -h --sort=modified'
-
-
+alias pbc='xclip -selection clipboard'
+alias pbp='xclip -selection clipboard -o'
 
 zstyle :compinstall filename "$HOME/.zshrc"
 
@@ -150,6 +152,11 @@ if command -v fzf >/dev/null 2>&1; then
 fi
 
 
+ 
+# RPC URLS
+sepolia_rpc_url=https://eth-sepolia.g.alchemy.com/v2/7moGyB4OM8Ert3cRTG3bO4mI4ZSu3TOz
+mainnet_rpc_url=https://eth-mainnet.g.alchemy.com/v2/7moGyB4OM8Ert3cRTG3bO4mI4ZSu3TOz
+
 # zsh-autosuggestions
 source_if_exists "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 source_if_exists "/usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
@@ -161,6 +168,7 @@ source_if_exists "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-high
 source_if_exists "/usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 [[ -n "$bp" ]] && source_if_exists "$bp/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
+source /usr/share/nvm/init-nvm.sh
 
 # Kitty shell integration (portable)
 # Kitty sets KITTY_INSTALLATION_DIR when launched from Kitty
