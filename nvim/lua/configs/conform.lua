@@ -1,8 +1,10 @@
-
 local options = {
   formatters_by_ft = {
     lua = { "stylua" },
     solidity = { "forge_fmt" },
+
+    -- ✅ markdown
+    markdown = { "prettier" },
   },
 
   format_on_save = {
@@ -14,6 +16,14 @@ local options = {
     forge_fmt = {
       command = "forge",
       args = { "fmt", "--raw", "-" },
+      stdin = true,
+    },
+
+    -- ✅ prettier formatter (Conform usually has this built-in,
+    -- but adding explicitly makes it unambiguous)
+    prettier = {
+      command = "prettier",
+      args = { "--stdin-filepath", "$FILENAME" },
       stdin = true,
     },
   },

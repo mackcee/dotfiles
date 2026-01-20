@@ -59,3 +59,17 @@ map("n", "<leader>rm", function()
 
   vim.notify "Mappings reloaded"
 end, { desc = "Reload mappings" })
+
+-- Insert blank line(s) below without leaving normal mode
+map("n", "<leader>o", function()
+  local n = vim.v.count1
+  -- put n empty lines below
+  vim.cmd("put =repeat([''], " .. n .. ")")
+end, { desc = "Insert blank line(s) below" })
+
+-- Insert blank line(s) above without leaving normal mode
+map("n", "<leader>O", function()
+  local n = vim.v.count1
+  -- put n empty lines above
+  vim.cmd("put! =repeat([''], " .. n .. ")")
+end, { desc = "Insert blank line(s) above" })
