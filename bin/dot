@@ -1,0 +1,250 @@
+#!/usr/bin/env bash
+# dot — day-to-day helper for ~/dotfiles.
+#
+#   dot link [--force]                       (re)create every link for this machine
+#   dot track <path> [--layer core|desktop|host]
+#                                            start syncing a config file or folder
+#   dot status                               show anything that needs attention
+#   dot theme-apply                          switch to the theme recorded in the repo
+set -euo pipefail
+
+DOTFILES_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+export DOTFILES_DIR
+# shellcheck source=lib/links.sh
+source "$DOTFILES_DIR/lib/links.sh"
+CONF="$DOTFILES_DIR/links.conf"
+
+usage() {
+  sed -n '2,9p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2
+  echo "usage: dot <link|track|status|theme-apply> ..." >&2
+}
+
+die() {
+  echo "dot: $*" >&2
+  exit 1
+}
+
+# Paths that must never be tracked: credentials, browser profiles, machine
+# identity. Matches any component of a path relative to $HOME.
+is_secret_path() {
+  local p="/$1" comp
+  case "$p" in
+    */gh/hosts.yml | */.docker/config.json) return 0 ;;
+  esac
+  local IFS=/
+  for comp in $1; do
+    case "$comp" in
+      gcloud | 1Password | syncthing | .ssh | .gnupg | .aws | .kube | keyrings | \
+        chromium | google-chrome* | BraveSoftware | .mozilla | mozilla | vivaldi* | microsoft-edge* | \
+        .netrc | .git-credentials | Cookies | "Login Data" | *.pem | *.key | id_rsa* | id_ed25519*)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+# True if the path, or anything inside it, is secret.
+contains_secret() {
+  local abs=$1 rel=$2 f
+  is_secret_path "$rel" && return 0
+  [[ -d "$abs" ]] || return 1
+  while IFS= read -r -d '' f; do
+    is_secret_path "$rel/${f#"$abs"/}" && return 0
+  done < <(find "$abs" -mindepth 1 -print0 2>/dev/null)
+  return 1
+}
+
+cmd_link() {
+  local force=0
+  [[ "${1:-}" == --force ]] && force=1
+  dot_link_all "$CONF" "$force"
+}
+
+cmd_track() {
+  local path="" layer="" arg
+  while (($#)); do
+    arg=$1
+    shift
+    case "$arg" in
+      --layer)
+        layer=${1:-}
+        shift || true
+        ;;
+      -*) die "unknown option $arg" ;;
+      *) path=$arg ;;
+    esac
+  done
+  [[ -n "$path" ]] || die "usage: dot track <path> [--layer core|desktop|host]"
+  if [[ -z "$layer" ]]; then
+    if dot_is_omarchy; then layer=desktop; else layer=core; fi
+  fi
+
+  local abs
+  case "$path" in
+    /*) abs=$path ;;
+    \~/*) abs="$HOME/${path#\~/}" ;;
+    *) abs="$HOME/.config/$path" ;;
+  esac
+  abs=${abs%/}
+  [[ "$abs" =~ [[:space:]] ]] && die "can't track paths with spaces (links.conf is space-separated): $abs"
+  [[ "$abs" == "$HOME"/* ]] || die "$abs is not under \$HOME"
+  case "$abs" in
+    "$HOME/.config" | "$HOME/.local" | "$HOME/.local/share" | "$HOME/.local/state" | "$HOME/.cache")
+      die "refusing to track the whole of $abs; track the individual app folder instead" ;;
+  esac
+  [[ "$DOTFILES_DIR/" == "$abs/"* || "$abs/" == "$DOTFILES_DIR/"* ]] &&
+    die "refusing to track $abs: it is, or contains, the dotfiles repo"
+
+  local rel tgt_spec tilde='~'
+  if [[ "$abs" == "$HOME/.config/"* ]]; then
+    rel=${abs#"$HOME/.config/"}
+    tgt_spec="$tilde/.config/$rel"
+  else
+    rel="home/${abs#"$HOME/"}"
+    tgt_spec="$tilde/${abs#"$HOME/"}"
+  fi
+
+  contains_secret "$abs" "${abs#"$HOME/"}" &&
+    die "refusing to track $abs: it is or contains a secret, browser profile or machine identity"
+  if [[ -L "$abs" ]]; then
+    [[ "$(readlink "$abs")" == "$DOTFILES_DIR"/* ]] && die "$abs is already tracked"
+    die "$abs is a symlink to somewhere else; resolve it first"
+  fi
+  [[ -e "$abs" ]] || die "$abs does not exist"
+
+  local layer_dir layer_key
+  case "$layer" in
+    core | desktop)
+      layer_dir=$layer
+      layer_key=$layer
+      ;;
+    host)
+      layer_dir="hosts/$(dot_hostname)"
+      layer_key="host:$(dot_hostname)"
+      ;;
+    *) die "layer must be core, desktop or host" ;;
+  esac
+
+  local repo_rel="$layer_dir/$rel" suffix=""
+  [[ -d "$abs" ]] && suffix="/"
+  [[ -e "$DOTFILES_DIR/$repo_rel" ]] && die "$repo_rel already exists in the repo"
+  if grep -qE "[[:space:]]${tgt_spec//./\\.}\$" "$CONF"; then
+    die "$tgt_spec is already listed in links.conf"
+  fi
+
+  mkdir -p "$(dirname "$DOTFILES_DIR/$repo_rel")"
+  mv "$abs" "$DOTFILES_DIR/$repo_rel"
+  printf '%s %s %s\n' "$layer_key" "$repo_rel$suffix" "$tgt_spec" >>"$CONF"
+  dot_link_one "$DOTFILES_DIR/$repo_rel" "$abs" 0
+}
+
+cmd_status() {
+  local problems=0 omarchy=0 resolved src tgt kind
+  dot_is_omarchy && omarchy=1
+
+  echo "== links"
+  resolved=$(dot_resolve_links "$CONF" "$omarchy" "$(dot_hostname)") || return 1
+  local n=0
+  while IFS=$'\t' read -r src tgt kind; do
+    [[ -n "$src" ]] || continue
+    if [[ ! -e "$src" ]]; then
+      echo "  source missing (still syncing?): $src"
+      n=$((n + 1))
+    elif [[ ! -L "$tgt" ]]; then
+      echo "  not linked: $tgt"
+      n=$((n + 1))
+    elif [[ "$(readlink "$tgt")" != "$src" ]]; then
+      echo "  points elsewhere: $tgt -> $(readlink "$tgt")"
+      n=$((n + 1))
+    fi
+  done <<<"$resolved"
+  ((n == 0)) && echo "  ok"
+  problems=$((problems + n))
+
+  echo "== stock"
+  n=0
+  if ((omarchy)); then
+    local stock_root="${DOTFILES_OMARCHY_ROOT:-/usr/share/omarchy}/config" rel
+    while IFS=$'\t' read -r src tgt kind; do
+      [[ "$src" == "$DOTFILES_DIR/desktop/"* && "$kind" == file ]] || continue
+      rel=${src#"$DOTFILES_DIR/desktop/"}
+      if [[ -f "$stock_root/$rel" ]] && cmp -s "$src" "$stock_root/$rel"; then
+        echo "  identical to Omarchy stock (an update or refresh may have overwritten it): $rel"
+        n=$((n + 1))
+      fi
+    done <<<"$resolved"
+    ((n == 0)) && echo "  ok"
+  else
+    echo "  (not an Omarchy machine)"
+  fi
+  problems=$((problems + n))
+
+  echo "== conflicts"
+  local conflicts
+  conflicts=$(find "$DOTFILES_DIR" -name '*.sync-conflict-*' -not -path '*/.stversions/*' 2>/dev/null || true)
+  if [[ -n "$conflicts" ]]; then
+    while IFS= read -r c; do echo "  ${c#"$DOTFILES_DIR/"}"; done <<<"$conflicts"
+    problems=$((problems + 1))
+  else
+    echo "  ok"
+  fi
+
+  echo "== hub"
+  local hs="$DOTFILES_DIR/.hub-status"
+  if [[ -f "$hs" ]]; then
+    local result message last_run
+    result=$(sed -n 's/^result=//p' "$hs")
+    message=$(sed -n 's/^message=//p' "$hs")
+    last_run=$(sed -n 's/^last_run=//p' "$hs")
+    echo "  $result at $last_run: $message"
+    [[ "$result" == fail ]] && problems=$((problems + 1))
+  else
+    echo "  no status yet"
+  fi
+
+  ((problems == 0))
+}
+
+current_theme_slug() {
+  local name_file="$HOME/.local/state/omarchy/current/theme.name" name
+  if [[ -s "$name_file" ]]; then
+    name=$(<"$name_file")
+  else
+    name=$(omarchy theme current 2>/dev/null || true)
+  fi
+  name=${name,,}
+  name=${name// /-}
+  printf '%s\n' "$name"
+}
+
+cmd_theme_apply() {
+  dot_is_omarchy || return 0
+  local want_file="$DOTFILES_DIR/desktop/omarchy/theme" want current
+  [[ -s "$want_file" ]] || return 0
+  want=$(<"$want_file")
+  want=${want//[[:space:]]/}
+  [[ -n "$want" ]] || return 0
+  current=$(current_theme_slug)
+  if [[ "$want" != "$current" ]]; then
+    echo "dot: switching theme $current -> $want"
+    omarchy theme set "$want"
+  fi
+}
+
+main() {
+  local sub=${1:-}
+  shift || true
+  case "$sub" in
+    link) cmd_link "$@" ;;
+    track) cmd_track "$@" ;;
+    status) cmd_status "$@" ;;
+    theme-apply) cmd_theme_apply "$@" ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

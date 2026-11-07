@@ -1,0 +1,8 @@
+[Unit]
+Description=Apply the Omarchy theme chosen on another machine (via ~/dotfiles)
+
+[Path]
+PathChanged=%h/dotfiles/desktop/omarchy/theme
+
+[Install]
+WantedBy=default.target

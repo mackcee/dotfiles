@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Omarchy theme-set hook (theme slug in $1): record the new theme in ~/dotfiles
+# so Syncthing carries it to Charlie's other Omarchy machines, where the
+# dotfiles-theme.path unit applies it.
+# Writes only when the value changes; that is what stops machines bouncing
+# the theme back and forth.
+set -euo pipefail
+dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../../../.." && pwd)"
+file="$dir/desktop/omarchy/theme"
+slug=${1:-}
+[[ -n "$slug" ]] || exit 0
+if [[ "$(cat "$file" 2>/dev/null || true)" != "$slug" ]]; then
+  printf '%s\n' "$slug" >"$file.tmp"
+  mv "$file.tmp" "$file"
+fi

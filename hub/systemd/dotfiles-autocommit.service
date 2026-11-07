@@ -1,0 +1,15 @@
+[Unit]
+Description=Commit and push ~/dotfiles changes to GitHub (daily)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Pinned copies installed at deploy time, outside the Syncthing-writable repo.
+ExecStart=/usr/local/lib/dotfiles-hub/autocommit.sh /srv/dotfiles
+EnvironmentFile=-/etc/dotfiles-hub/local.env
+ProtectSystem=strict
+ReadWritePaths=/srv/dotfiles
+ProtectHome=read-only
+PrivateTmp=yes
+NoNewPrivileges=yes

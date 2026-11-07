@@ -1,0 +1,55 @@
+# --- never synced or committed: credentials and machine identity ---
+gh/hosts.yml
+**/gh/hosts.yml
+gcloud
+**/gcloud
+1Password
+**/1Password
+syncthing
+**/syncthing
+.ssh
+**/.ssh
+.netrc
+**/.netrc
+**/*.pem
+**/*.key
+**/id_rsa*
+**/id_ed25519*
+chromium
+**/chromium
+google-chrome*
+**/google-chrome*
+BraveSoftware
+**/BraveSoftware
+.mozilla
+**/.mozilla
+vivaldi*
+**/vivaldi*
+microsoft-edge*
+**/microsoft-edge*
+.gnupg
+**/.gnupg
+.aws
+**/.aws
+.kube
+**/.kube
+**/.docker/config.json
+.git-credentials
+**/.git-credentials
+**/Cookies
+**/Login Data
+**/keyrings
+# --- hub-local, never public ---
+hub/local.env
+hub/local.denylist
+.hub-status
+# --- noise ---
+*.bak.*
+*.sync-conflict-*
+.syncthing.*.tmp
+~syncthing~*.tmp
+.stignore
+.stfolder
+.stversions
+.superpowers/
+tests/.smoke/

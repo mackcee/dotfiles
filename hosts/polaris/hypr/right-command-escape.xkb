@@ -1,0 +1,10 @@
+xkb_keymap {
+  xkb_keycodes { include "evdev+aliases(qwerty)" };
+  xkb_types { include "complete" };
+  xkb_compat { include "complete" };
+  xkb_symbols {
+    include "pc+us+inet(evdev)+ctrl(swapcaps)+shift(both_capslock_cancel)"
+    replace key <RWIN> { type = "ONE_LEVEL", [ Escape ] };
+    modifier_map None { <RWIN> };
+  };
+};

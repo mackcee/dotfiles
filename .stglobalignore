@@ -1,0 +1,51 @@
+// Shared Syncthing ignore rules for ~/dotfiles. Synced to every device.
+// Each device's local .stignore contains only:  #include .stglobalignore
+// On a new device, start with an empty .stignore, wait for this file to arrive,
+// then add the include line (a missing include file puts the folder in error).
+.git
+.superpowers
+(?d)*.bak.*
+(?d)**/.nvimlog
+(?d)**/lazy
+gh/hosts.yml
+**/gh/hosts.yml
+gcloud
+**/gcloud
+1Password
+**/1Password
+syncthing
+**/syncthing
+.ssh
+**/.ssh
+.netrc
+**/.netrc
+**/*.pem
+**/*.key
+**/id_rsa*
+**/id_ed25519*
+hub/local.env
+hub/local.denylist
+chromium
+**/chromium
+google-chrome*
+**/google-chrome*
+BraveSoftware
+**/BraveSoftware
+.mozilla
+**/.mozilla
+vivaldi*
+**/vivaldi*
+microsoft-edge*
+**/microsoft-edge*
+.gnupg
+**/.gnupg
+.aws
+**/.aws
+.kube
+**/.kube
+**/.docker/config.json
+.git-credentials
+**/.git-credentials
+**/Cookies
+**/Login Data
+**/keyrings

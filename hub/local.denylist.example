@@ -1,0 +1,9 @@
+# Private strings that must never reach the public repo.
+# Copy to <repo>/hub/local.denylist on the hub (git-ignored, not synced), and
+# to the same place in any checkout you publish from.
+# One fixed string per line, matched case-insensitively. Blank lines and
+# lines starting with # are ignored. Examples of what belongs here:
+#   <the hub container's ID, written the way it appears in notes>
+#   <NAS pool / dataset names>
+#   <LAN subnet prefix>
+#   <tailnet name>

@@ -1,0 +1,6 @@
+[Unit]
+Description=Apply the Omarchy theme recorded in ~/dotfiles
+
+[Service]
+Type=oneshot
+ExecStart=%h/dotfiles/bin/dot theme-apply

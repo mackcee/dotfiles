@@ -1,0 +1,26 @@
+# shellcheck shell=bash
+# ~/.bashrc for machines without Omarchy. Managed by ~/dotfiles (vm layer).
+# Omarchy machines keep Omarchy's own ~/.bashrc and load core/bash/personal.bash.
+
+[[ -r /etc/bashrc ]] && . /etc/bashrc
+
+export PATH="$HOME/.local/bin:$PATH"
+export EDITOR=nvim
+
+[[ $- == *i* ]] || return 0
+
+HISTSIZE=32768
+HISTFILESIZE=$HISTSIZE
+HISTCONTROL=ignoreboth
+shopt -s histappend
+
+[[ -r /usr/share/bash-completion/bash_completion ]] && . /usr/share/bash-completion/bash_completion
+# musl (Alpine): Neovim and Node come from apk, not mise.
+compgen -G '/lib/ld-musl-*' >/dev/null && export MISE_DISABLE_TOOLS=neovim,node
+command -v mise >/dev/null 2>&1 && eval "$(mise activate bash)"
+command -v starship >/dev/null 2>&1 && eval "$(starship init bash)"
+
+__dotfiles_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../.." && pwd)"
+# shellcheck source=core/bash/personal.bash
+[[ -r "$__dotfiles_dir/core/bash/personal.bash" ]] && . "$__dotfiles_dir/core/bash/personal.bash"
+unset __dotfiles_dir

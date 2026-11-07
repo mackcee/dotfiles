@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily dotfiles commit and push
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 Europe/Amsterdam
+Persistent=true
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

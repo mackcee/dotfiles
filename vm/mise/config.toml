@@ -1,0 +1,9 @@
+# Tools for machines WITHOUT Omarchy (vm layer). Omarchy machines use Omarchy's
+# own packages instead, so there is only ever one Neovim on PATH.
+[tools]
+neovim = "0.12.6"
+lazygit = "0.66.2"
+starship = "1.27.0"
+bat = "0.26.1"
+eza = "0.23.5"
+node = "26.8.1"   # LSP servers installed by Mason
