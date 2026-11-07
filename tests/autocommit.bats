@@ -154,6 +154,8 @@ origin_count() { git -C "$ORIGIN" rev-list --count main; }
   assert_output --partial "ProtectSystem=strict"
   assert_output --partial "ReadWritePaths=/srv/dotfiles"
   assert_output --partial "NoNewPrivileges=yes"
+  # Root system services get no $HOME; git needs it for the deploy key and identity.
+  assert_output --partial "Environment=HOME=/root"
 }
 
 @test "refuses to run when the repo doesn't ignore the hub's private files" {

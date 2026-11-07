@@ -7,9 +7,13 @@ After=network-online.target
 Type=oneshot
 # Pinned copies installed at deploy time, outside the Syncthing-writable repo.
 ExecStart=/usr/local/lib/dotfiles-hub/autocommit.sh /srv/dotfiles
+Environment=HOME=/root
 EnvironmentFile=-/etc/dotfiles-hub/local.env
 ProtectSystem=strict
 ReadWritePaths=/srv/dotfiles
 ProtectHome=read-only
 PrivateTmp=yes
 NoNewPrivileges=yes
+# In an LXC without nesting, systemd can't set up the namespaces above
+# (exit 226/NAMESPACE). Add a local drop-in there that resets ProtectSystem,
+# ProtectHome, PrivateTmp and ReadWritePaths (the hub container has one).
