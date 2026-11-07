@@ -1,0 +1,4 @@
+! include %S/evdev
+
+! option = symbols
+  mackc:ralt_escape = +mackc(ralt_escape)

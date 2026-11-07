@@ -4,7 +4,7 @@ setup() { setup_fake_home; source "$DOTFILES_DIR/lib/links.sh"; }
 
 @test "every links.conf source exists, for every machine kind" {
   for om in 0 1; do
-    for host in polaris aurora-2 somevm; do
+    for host in polaris aurora somevm; do
       run dot_resolve_links "$DOTFILES_DIR/links.conf" "$om" "$host"
       assert_success
       while IFS=$'\t' read -r src _ kind; do

@@ -1,0 +1,5 @@
+partial modifier_keys
+xkb_symbols "ralt_escape" {
+    replace key <RALT> { type[Group1] = "ONE_LEVEL", [ Escape ] };
+    modifier_map None { <RALT> };
+};
