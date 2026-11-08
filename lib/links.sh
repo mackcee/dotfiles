@@ -29,7 +29,8 @@ dot_hostname() {
   else
     local h
     h=$(hostname -s 2>/dev/null || hostname 2>/dev/null || cat /etc/hostname)
-    printf '%s\n' "${h%%.*}"
+    h=${h%%.*}
+    printf '%s\n' "${h,,}"
   fi
 }
 

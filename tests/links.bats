@@ -141,3 +141,10 @@ write_conf() { printf '%s\n' "$@" >"$CONF"; }
   assert_failure
   assert_link_exists "$HOME/.config/nvim"
 }
+
+@test "hostname matching is case-insensitive (Polaris reports 'Polaris')" {
+  unset DOT_HOSTNAME
+  stub hostname 'echo Polaris'
+  run dot_hostname
+  assert_output "polaris"
+}

@@ -31,3 +31,8 @@
 -- Move the default dictation toggle to Super + Shift + Q.
 hl.unbind("SUPER + CTRL + X")
 o.bind("SUPER + SHIFT + Q", "Toggle dictation", "voxtype record toggle")
+
+-- >>> anki-dictate >>>
+-- Managed by anki-dictate. Re-run its install.sh to update or uninstall.sh to remove.
+o.bind("SUPER + ALT + Q", "Dictate Anki card", "voxtype record toggle --profile anki")
+-- <<< anki-dictate <<<
